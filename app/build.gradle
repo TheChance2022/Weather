@@ -51,4 +51,8 @@ dependencies {
 
     // gson for Kotlin to parse JSON responses from the server
     implementation 'com.google.code.gson:gson:2.9.0'
+
+    // lottie support
+    implementation 'com.airbnb.android:lottie:5.2.0'
+
 }

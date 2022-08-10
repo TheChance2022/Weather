@@ -2,6 +2,8 @@ package com.moataz.weather.ui
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.Gson
 import com.moataz.weather.data.model.WeatherResponse
@@ -39,6 +41,9 @@ class MainActivity : AppCompatActivity() {
                         binding.sunset.text = result.data[0].sunset
                         binding.windSpeed.text = result.data[0].wind_spd.toInt().toString()
                         binding.rh.text = result.data[0].rh.toInt().toString()
+                        binding.group.visibility = View.VISIBLE
+                        binding.animationLoding.visibility =View.INVISIBLE
+                        //binding.animationLoding.pauseAnimation()
                     }
                 }
             }
