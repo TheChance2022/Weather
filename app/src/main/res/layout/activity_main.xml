@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
     tools:context=".ui.MainActivity">
 
     <androidx.constraintlayout.widget.Group
@@ -39,7 +38,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:lottie_autoPlay="true"
         app:lottie_loop="true"
-        app:lottie_rawRes="@raw/icon_loding_lottie" />
+        app:lottie_rawRes="@raw/icon_loding" />
 
     <TextView
         android:id="@+id/description_txv"
