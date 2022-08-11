@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import com.google.gson.Gson
+import com.moataz.weather.R
 import com.moataz.weather.data.model.WeatherResponse
 import com.moataz.weather.data.request.ApiClient
 import com.moataz.weather.data.request.NetworkResult
@@ -51,26 +53,31 @@ class MainActivity : AppCompatActivity() {
                     is NetworkResult.Failure -> displayFailureState()
                     is NetworkResult.Loading -> displayLoadingState()
                     is NetworkResult.Success -> displayWeatherData(status)
-
                 }
             }
     }
 
     private fun displayLoadingState() {
-        TODO("Not yet implemented")
+        binding.group.isVisible = false
+        binding.animationLoding.isVisible =  true
     }
 
     private fun displayFailureState() {
-        TODO("Not yet implemented")
+        binding.group.isVisible = false
+        binding.animationLoding.setAnimation(R.raw.icon_error)
+        binding.animationLoding.playAnimation()
+        binding.animationLoding.isVisible =  true
     }
 
     private fun displayWeatherData(status: NetworkResult.Success<WeatherResponse>) {
+        binding.group.isVisible = true
+        binding.animationLoding.isVisible =  false
+
         binding.descriptionTxv.text = status.transferredData.data.first().weather.description
         binding.tem.text = "${status.transferredData.data.first().temp} °C"
         binding.sunset.text = status.transferredData.data.first().sunset
         binding.windSpeed.text = status.transferredData.data.first().wind_spd.toInt().toString()
         binding.rh.text = status.transferredData.data.first().rh.toInt().toString()
     }
-
 
 }
