@@ -42,14 +42,14 @@ class MainActivity : AppCompatActivity() {
             .subscribe { status ->
                 when (status) {
                     is NetworkStatus.Failure -> {
-                        displayVisibilityState(false)
+                        displayNormalVisibilityState()
                         displayFailureState()
                     }
                     is NetworkStatus.Loading -> {
-                        displayVisibilityState(true)
+                        displayLoadingVisibilityState()
                     }
                     is NetworkStatus.Success -> {
-                        displayVisibilityState(false)
+                        displayNormalVisibilityState()
                         displayWeatherData(status)
                     }
                 }
@@ -72,17 +72,17 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun displayVisibilityState(visibility: Boolean) {
-        if (visibility) {
-            binding.apply {
-                group.visibility = View.GONE
-                animationLoding.visibility = View.VISIBLE
-            }
-        } else {
-            binding.apply {
-                group.visibility = View.VISIBLE
-                animationLoding.visibility = View.GONE
-            }
+    private fun displayLoadingVisibilityState(){
+        binding.apply {
+            group.visibility = View.GONE
+            animationLoding.visibility = View.VISIBLE
+        }
+    }
+
+    private fun displayNormalVisibilityState(){
+        binding.apply {
+            group.visibility = View.VISIBLE
+            animationLoding.visibility = View.GONE
         }
     }
 
