@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Weather Chance</string>
+    <string name="weather_description">Clear sky</string>
     <string name="city_name">Cairo</string>
+    <string name="temp">%s &#xb0;C</string>
     <string name="cairo_tower_background">Cairo Tower background</string>
 </resources>

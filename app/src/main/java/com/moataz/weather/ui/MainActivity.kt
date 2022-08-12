@@ -1,18 +1,20 @@
 package com.moataz.weather.ui
 
-import android.annotation.SuppressLint
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isVisible
 import com.google.gson.Gson
 import com.moataz.weather.R
 import com.moataz.weather.data.model.WeatherResponse
 import com.moataz.weather.data.request.ApiClient
-import com.moataz.weather.data.request.NetworkResult
+import com.moataz.weather.data.request.NetworkStatus
 import com.moataz.weather.databinding.ActivityMainBinding
+import com.moataz.weather.utils.add
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.ObservableEmitter
+import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import okhttp3.Call
 import okhttp3.Callback
@@ -22,62 +24,91 @@ import java.io.IOException
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val apiClient by lazy { ApiClient() }
+    private var compositeDisposable: CompositeDisposable? = null
 
-
-    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        getNetworkResult()
+    }
 
-        val netWorkResult = Observable.create<NetworkResult<WeatherResponse>> { status ->
-            status.onNext(NetworkResult.Loading())
-            apiClient.makeApiRequest().enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    status.onNext(NetworkResult.Failure(e.message.toString()))
-                }
-
-                override fun onResponse(call: Call, response: Response) {
-                    response.body?.string().let { jsonString ->
-                        val transferredData =
-                            Gson().fromJson(jsonString, WeatherResponse::class.java)
-                        status.onNext(NetworkResult.Success(transferredData))
-                    }
-                }
-            })
+    private fun getNetworkResult() {
+        val netWorkResult = Observable.create { status ->
+            status.onNext(NetworkStatus.Loading())
+            callWeatherAPI(status)
         }
-
         netWorkResult.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
             .subscribe { status ->
                 when (status) {
-                    is NetworkResult.Failure -> displayFailureState()
-                    is NetworkResult.Loading -> displayLoadingState()
-                    is NetworkResult.Success -> displayWeatherData(status)
+                    is NetworkStatus.Failure -> {
+                        displayVisibilityState(false)
+                        displayFailureState()
+                    }
+                    is NetworkStatus.Loading -> {
+                        displayVisibilityState(true)
+                    }
+                    is NetworkStatus.Success -> {
+                        displayVisibilityState(false)
+                        displayWeatherData(status)
+                    }
                 }
-            }
+            }.add(compositeDisposable)
     }
 
-    private fun displayLoadingState() {
-        binding.group.isVisible = false
-        binding.animationLoding.isVisible =  true
+    private fun callWeatherAPI(status: ObservableEmitter<NetworkStatus<WeatherResponse>>) {
+        apiClient.makeApiRequest().enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                status.onNext(NetworkStatus.Failure(e.message.toString()))
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.body?.string().let { jsonString ->
+                    val transferredData =
+                        Gson().fromJson(jsonString, WeatherResponse::class.java)
+                    status.onNext(NetworkStatus.Success(transferredData))
+                }
+            }
+        })
+    }
+
+    private fun displayVisibilityState(visibility: Boolean) {
+        if (visibility) {
+            binding.apply {
+                group.visibility = View.GONE
+                animationLoding.visibility = View.VISIBLE
+            }
+        } else {
+            binding.apply {
+                group.visibility = View.VISIBLE
+                animationLoding.visibility = View.GONE
+            }
+        }
     }
 
     private fun displayFailureState() {
-        binding.group.isVisible = false
-        binding.animationLoding.setAnimation(R.raw.icon_error)
-        binding.animationLoding.playAnimation()
-        binding.animationLoding.isVisible =  true
+        binding.apply {
+            animationLoding.setAnimation(R.raw.icon_error)
+            animationLoding.playAnimation()
+        }
     }
 
-    private fun displayWeatherData(status: NetworkResult.Success<WeatherResponse>) {
-        binding.group.isVisible = true
-        binding.animationLoding.isVisible =  false
-
-        binding.descriptionTxv.text = status.transferredData.data.first().weather.description
-        binding.tem.text = "${status.transferredData.data.first().temp} °C"
-        binding.sunset.text = status.transferredData.data.first().sunset
-        binding.windSpeed.text = status.transferredData.data.first().wind_spd.toInt().toString()
-        binding.rh.text = status.transferredData.data.first().rh.toInt().toString()
+    private fun displayWeatherData(status: NetworkStatus.Success<WeatherResponse>) {
+        binding.apply {
+            descriptionTextview.text = status.transferredData.data.first().weather.description
+            temperature.text = resources.getString(
+                R.string.temp, status.transferredData.data.first().temp.toString()
+            )
+            sunsetTextview.text = status.transferredData.data.first().sunset
+            windSpeedTextview.text = status.transferredData.data.first().wind_spd.toInt().toString()
+            humidityTextview.text = status.transferredData.data.first().rh.toInt().toString()
+        }
     }
 
+    override fun onDestroy() {
+        compositeDisposable?.dispose()
+        super.onDestroy()
+    }
 }
+
+
